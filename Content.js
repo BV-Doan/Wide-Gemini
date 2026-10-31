@@ -1,5 +1,7 @@
 // Content.js - 팝업의 신호를 받아 실제 페이지 너비와 요소 표시/숨김을 처리합니다.
 
+let currentCleanView = true;
+
 // 너비를 적용하는 함수
 function applyWidth(width) {
     const styleId = 'gemini-wide-style';
@@ -152,29 +154,49 @@ function applyWidth(width) {
 
 // "정리된 보기"를 위해 모든 불필요한 요소를 숨기거나 표시하는 함수
 function applyVisibility(hide) {
+    currentCleanView = hide;
     const selectors = [
         '.desktop-ogb-buffer',
         '.buttons-container.adv-upsell.ng-star-inserted',
         '.gds-label-m-alt.desktop-spacing.ng-star-inserted',
-        '.boqOnegoogleliteOgbOneGoogleBar',
-        '.top-bar-actions',
-        '.hallucination-disclaimer'
+        '.top-bar-actions'
     ];
     selectors.forEach(selector => {
         const els = document.querySelectorAll(selector);
         els.forEach(el => el.style.display = hide ? 'none' : '');
     });
+
+    // Giữ khoảng trống 14px dưới thanh nhập câu lệnh khi ẩn dòng cảnh báo
+    const disclaimers = document.querySelectorAll('.hallucination-disclaimer, hallucination-disclaimer');
+    disclaimers.forEach(el => {
+        if (hide) {
+            el.style.setProperty('visibility', 'hidden', 'important');
+            el.style.setProperty('height', '14px', 'important');
+            el.style.setProperty('min-height', '14px', 'important');
+            el.style.setProperty('margin', '0', 'important');
+            el.style.setProperty('padding', '0', 'important');
+            el.style.setProperty('overflow', 'hidden', 'important');
+        } else {
+            el.style.removeProperty('visibility');
+            el.style.removeProperty('height');
+            el.style.removeProperty('min-height');
+            el.style.removeProperty('margin');
+            el.style.removeProperty('padding');
+            el.style.removeProperty('overflow');
+        }
+    });
 }
 
 // DOM 변화를 관찰하고 cleanView가 활성화되었을 때 요소를 즉시 적용하는 함수
 function observeDOM(cleanView) {
+    currentCleanView = cleanView;
     const observer = new MutationObserver(() => { 
-        applyVisibility(cleanView);
+        applyVisibility(currentCleanView);
         injectTableButtons();
     });
     observer.observe(document.body, { childList: true, subtree: true });
     // 페이지 로드 시 바로 적용
-    applyVisibility(cleanView);
+    applyVisibility(currentCleanView);
     injectTableButtons();
 }
 
